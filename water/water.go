@@ -90,7 +90,7 @@ func login(user, pass, acct string) (*browser.Browser, error) {
 	return b, nil
 }
 
-// DownloadDailyUsage returns a headered tsv of daily water usage data
+// DownloadDailyUsage returns a report of daily water usage data
 func DownloadDailyUsage(startDay, endDay time.Time, user, pass, acct string) (*Report, error) {
 	if startDay.Year() != endDay.Year() {
 		return nil, fmt.Errorf("startDay year should match endDay year")
@@ -200,7 +200,7 @@ func DownloadDailyUsage(startDay, endDay time.Time, user, pass, acct string) (*R
 	return &fullReport, nil
 }
 
-// DownloadHourlyUsage returns a headered tsv of hourly water usage data
+// DownloadHourlyUsage returns a report of hourly water usage data
 func DownloadHourlyUsage(start, end time.Time, user, pass, acct string) (*Report, error) {
 	b, err := login(user, pass, acct)
 	if err != nil {
@@ -322,7 +322,7 @@ func parseUsage(rawUsage string) (*Report, error) {
 	return report, nil
 }
 
-// AnalyzeUsage does a simple analysis of maximum and 2 day avg water usage
+// AnalyzeUsage does a simple analysis of maximum and 2 day avg water usage and alert if thresholds are crossed.
 func AnalyzeUsage(ctx context.Context, report *Report, twoDayAvgMax, oneDayMax int, alerter Alerter) error {
 	numRecords := len(report.Records)
 	if numRecords < 3 {
