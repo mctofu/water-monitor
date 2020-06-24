@@ -39,14 +39,18 @@ func checkMonitor(ctx context.Context) error {
 	user := os.Getenv("WATER_USER")
 	pass := os.Getenv("WATER_PASS")
 	acct := os.Getenv("WATER_ACCT")
-	snsARN := os.Getenv("SNS_ARN")
+	usageSNSARN := os.Getenv("USAGE_SNS_ARN")
+	failSNSARN := os.Getenv("FAIL_SNS_ARN")
+	reportSNSARN := os.Getenv("REPORT_SNS_ARN")
 
 	sess := session.Must(session.NewSession())
-	alerter := snsAlerter{sns.New(sess), snsARN}
+	snsAPI := sns.New(sess)
+	usageAlerter := snsAlerter{snsAPI, usageSNSARN}
+	failAlerter := snsAlerter{snsAPI, failSNSARN}
 
 	report, err := water.DownloadDailyUsage(time.Time{}, time.Time{}, user, pass, acct)
 	if err != nil {
-		alertErr := alerter.Alert(ctx, fmt.Sprintf("Failed to retrieve water usage: %v", err))
+		alertErr := failAlerter.Alert(ctx, fmt.Sprintf("Failed to retrieve water usage: %v", err))
 		if alertErr != nil {
 			return fmt.Errorf("failed to alert: %v\n orig alert: %v", alertErr, err)
 		}
@@ -55,13 +59,23 @@ func checkMonitor(ctx context.Context) error {
 
 	log.Printf("Usage data:\n%s\n", report)
 
-	err = water.AnalyzeUsage(ctx, report, 1500, 2000, alerter)
+	err = water.AnalyzeUsage(ctx, report, 1500, 2000, usageAlerter)
 	if err != nil {
-		alertErr := alerter.Alert(ctx, fmt.Sprintf("Failed to analyze water usage: %v", err))
+		alertErr := failAlerter.Alert(ctx, fmt.Sprintf("Failed to analyze water usage: %v", err))
 		if alertErr != nil {
 			return fmt.Errorf("failed to alert: %v\n orig alert: %v", alertErr, err)
 		}
 		return fmt.Errorf("failed to analyze water usage: %v", err)
+	}
+
+	if time.Now().Weekday() == time.Sunday {
+		if err := publish(ctx, snsAPI, reportSNSARN, "Water monitor summary", report.String()); err != nil {
+			alertErr := failAlerter.Alert(ctx, fmt.Sprintf("Failed to report water usage: %v", err))
+			if alertErr != nil {
+				return fmt.Errorf("failed to alert: %v\n orig alert: %v", alertErr, err)
+			}
+			return fmt.Errorf("failed to report water usage: %v", err)
+		}
 	}
 
 	return nil
@@ -74,10 +88,20 @@ type snsAlerter struct {
 
 func (a snsAlerter) Alert(ctx context.Context, msg string) error {
 	log.Printf("Alerting: %v\n", msg)
-	_, err := a.Publisher.PublishWithContext(ctx, &sns.PublishInput{
+	return publish(
+		ctx,
+		a.Publisher,
+		a.ARN,
+		"Water monitor alert",
+		msg,
+	)
+}
+
+func publish(ctx context.Context, pub *sns.SNS, arn string, subj, msg string) error {
+	_, err := pub.PublishWithContext(ctx, &sns.PublishInput{
 		Message:  aws.String(msg),
 		Subject:  aws.String("Water monitor alert"),
-		TopicArn: aws.String(a.ARN),
+		TopicArn: aws.String(arn),
 	})
 	return err
 }
