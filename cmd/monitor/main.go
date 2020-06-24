@@ -73,7 +73,7 @@ type snsAlerter struct {
 }
 
 func (a snsAlerter) Alert(ctx context.Context, msg string) error {
-	log.Printf("Alerting: %v", msg)
+	log.Printf("Alerting: %v\n", msg)
 	_, err := a.Publisher.PublishWithContext(ctx, &sns.PublishInput{
 		Message:  aws.String(msg),
 		Subject:  aws.String("Water monitor alert"),
