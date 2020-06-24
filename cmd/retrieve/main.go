@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/mctofu/hoa/water"
+	"github.com/mctofu/water-monitor/water"
 )
 
 func main() {

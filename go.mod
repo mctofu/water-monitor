@@ -1,4 +1,4 @@
-module github.com/mctofu/hoa/water
+module github.com/mctofu/water-monitor
 
 require (
 	github.com/PuerkitoBio/goquery v1.1.0 // indirect
