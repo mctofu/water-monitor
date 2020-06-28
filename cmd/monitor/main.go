@@ -100,7 +100,7 @@ func (a snsAlerter) Alert(ctx context.Context, msg string) error {
 func publish(ctx context.Context, pub *sns.SNS, arn string, subj, msg string) error {
 	_, err := pub.PublishWithContext(ctx, &sns.PublishInput{
 		Message:  aws.String(msg),
-		Subject:  aws.String("Water monitor alert"),
+		Subject:  aws.String(subj),
 		TopicArn: aws.String(arn),
 	})
 	return err
