@@ -1,0 +1,42 @@
+name: Go build and deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.14
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Test
+      run: go test -cover ./...
+
+    - name: Build artifact
+      run: |
+        go build -v -o water-monitor github.com/mctofu/water-monitor/cmd/monitor
+        zip water-monitor.zip water-monitor
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Deploy
+      run: |
+        aws lambda update-function-code \
+          --function-name ${{ secrets.FUNCTION_NAME }} \
+          --zip-file fileb://water-monitor.zip > /dev/null
