@@ -2,7 +2,7 @@ module github.com/mctofu/water-monitor
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
-	github.com/aws/aws-lambda-go v1.17.0
+	github.com/aws/aws-lambda-go v1.18.0
 	github.com/aws/aws-sdk-go v1.32.12
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/headzoo/surf v1.0.0
