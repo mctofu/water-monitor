@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fcjr/aia-transport-go"
 	"github.com/headzoo/surf"
 	"github.com/headzoo/surf/browser"
 )
@@ -47,7 +48,15 @@ func login(user, pass, acct string) (*browser.Browser, error) {
 	b := surf.NewBrowser()
 	b.SetUserAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36")
 	b.AddRequestHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	err := b.Open("https://myaccount.sfwater.org/")
+
+	// workaround incomplete certificate chain
+	tr, err := aia.NewTransport()
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create incomplete certificate chain workaround transport: %v", err)
+	}
+	b.SetTransport(tr)
+
+	err = b.Open("https://myaccount.sfwater.org/")
 	if err != nil {
 		return nil, fmt.Errorf("couldn't open site: %v", err)
 	}
