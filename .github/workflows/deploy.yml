@@ -14,7 +14,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v4
       with:
-        go-version: ^1.14
+        go-version: ^1.20
       id: go
 
     - name: Check out code into the Go module directory
@@ -25,8 +25,8 @@ jobs:
 
     - name: Build artifact
       run: |
-        go build -v -o water-monitor github.com/mctofu/water-monitor/cmd/monitor
-        zip water-monitor.zip water-monitor
+        go build -v -tags lambda.norpc -o bootstrap github.com/mctofu/water-monitor/cmd/monitor
+        zip water-monitor.zip bootstrap
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
