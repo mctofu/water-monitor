@@ -25,7 +25,7 @@ jobs:
 
     - name: Build artifact
       run: |
-        go build -v -tags lambda.norpc -o bootstrap github.com/mctofu/water-monitor/cmd/monitor
+        CGO_ENABLED=0 go build -v -tags lambda.norpc -o bootstrap github.com/mctofu/water-monitor/cmd/monitor
         zip water-monitor.zip bootstrap
 
     - name: Configure AWS credentials
