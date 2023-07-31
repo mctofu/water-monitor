@@ -15,7 +15,7 @@ func main() {
 	acct := os.Getenv("WATER_ACCT")
 
 	if len(os.Args) != 3 {
-		log.Fatalf("usage: <hourly|monthly> <yyyyMM>")
+		log.Fatalf("usage: <hourly|daily> <yyyyMM>")
 	}
 
 	start, err := time.Parse("200601", os.Args[2])
