@@ -1,7 +1,7 @@
 module github.com/mctofu/water-monitor
 
 require (
-	github.com/aws/aws-lambda-go v1.47.0
+	github.com/aws/aws-lambda-go v1.49.0
 	github.com/aws/aws-sdk-go v1.44.312
 	github.com/fcjr/aia-transport-go v1.2.2
 	github.com/headzoo/surf v1.0.1
