@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -43,6 +44,15 @@ func checkMonitor(ctx context.Context) error {
 	failSNSARN := os.Getenv("FAIL_SNS_ARN")
 	reportSNSARN := os.Getenv("REPORT_SNS_ARN")
 
+	twoDayAvgMax, err := envInt("USAGE_ALERT_TWO_DAY_AVG_MAX", 1500)
+	if err != nil {
+		return err
+	}
+	oneDayMax, err := envInt("USAGE_ALERT_ONE_DAY_MAX", 2000)
+	if err != nil {
+		return err
+	}
+
 	sess := session.Must(session.NewSession())
 	snsAPI := sns.New(sess)
 	usageAlerter := snsAlerter{snsAPI, usageSNSARN}
@@ -59,7 +69,7 @@ func checkMonitor(ctx context.Context) error {
 
 	log.Printf("Usage data:\n%s\n", report)
 
-	err = water.AnalyzeUsage(ctx, report, 1500, 2000, usageAlerter)
+	err = water.AnalyzeUsage(ctx, report, twoDayAvgMax, oneDayMax, usageAlerter)
 	if err != nil {
 		alertErr := failAlerter.Alert(ctx, fmt.Sprintf("Failed to analyze water usage: %v", err))
 		if alertErr != nil {
@@ -79,6 +89,19 @@ func checkMonitor(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// envInt returns the positive integer value of env var name, or def if unset.
+func envInt(name string, def int) (int, error) {
+	v, ok := os.LookupEnv(name)
+	if !ok {
+		return def, nil
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		return 0, fmt.Errorf("invalid %s value %q: must be a positive integer", name, v)
+	}
+	return n, nil
 }
 
 type snsAlerter struct {
